@@ -1,0 +1,5 @@
+{
+  "name": "GitHub Repo Analyzer AI",
+  "description": "An AI-powered GitHub Repository Analyzer with real-time Q&A and collaboration features. This application allows users to input a GitHub repository URL, view its details (structure, commits, issues, PRs, contributors), ask questions about the repository to a Gemini-powered AI, and engage in a real-time chat with other users analyzing the same repository. Real-time chat functionality is implemented using Socket.IO client and requires a compatible backend Socket.IO server to be fully operational.",
+  "requestFramePermissions": []
+}
