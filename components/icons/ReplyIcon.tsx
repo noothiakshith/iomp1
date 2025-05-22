@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const CodeIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-6" }) => (
+export const ReplyIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-6" }) => (
   <svg
     className={className}
     fill="none"
@@ -12,7 +12,7 @@ export const CodeIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-
       strokeLinecap="round"
       strokeLinejoin="round"
       strokeWidth={2}
-      d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+      d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
     />
   </svg>
-);
+); 

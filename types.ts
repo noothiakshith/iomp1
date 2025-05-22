@@ -1,4 +1,3 @@
-
 export interface Commit {
   sha: string;
   message: string;
@@ -67,13 +66,35 @@ export interface RepoData {
 
 export interface ChatMessage {
   id: string;
-  user: string; // 'You' or 'Bot' or other user's identifier
   text: string;
+  user: string;
   timestamp: number;
-  isAIMessage?: boolean; // True for AI system messages or AI Q&A intro/summary in chat
-  isSystemMessage?: boolean; // True for connection status, join/leave notifications
-  isOwnMessage?: boolean; // True if the message was sent by the current user
-  roomId?: string; // To associate message with a specific repo room
+  roomId: string;
+  isAIMessage?: boolean;
+  isSystemMessage?: boolean;
+  isOwnMessage?: boolean;
+  reactions?: string[];
+  codeSnippets?: CodeSnippet[];
+  parentMessageId?: string; // For threaded replies
+  threadCount?: number; // Number of replies in thread
+  isEdited?: boolean;
+  editHistory?: {
+    text: string;
+    timestamp: number;
+  }[];
+  mentions?: string[]; // For @mentions
+  attachments?: {
+    type: 'image' | 'file' | 'link';
+    url: string;
+    name: string;
+    size?: number;
+  }[];
+}
+
+export interface CodeSnippet {
+  code: string;
+  language: string;
+  timestamp: number;
 }
 
 export interface AIConversation {
@@ -85,6 +106,14 @@ export interface AIConversation {
   error?: string | null;
   repoFullName: string; // To associate with a specific repo
   user?: string; // User who asked the question (e.g., MOCK_USER_ID or other identifier)
+}
+
+export interface CodeAnalysis {
+  suggestions: string[];
+  complexity: number;
+  issues: string[];
+  improvements: string[];
+  explanation: string;
 }
 
 export enum ActiveView {
