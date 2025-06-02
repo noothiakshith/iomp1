@@ -1,10 +1,11 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { GithubInput } from './components/GithubInput';
 import { RepoView } from './components/RepoView';
 import { ChatWindow } from './components/ChatWindow';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { Navbar } from './components/Navbar';
+import { CodeExplainer } from './components/CodeExplainer';
+import { CodeAnalysis } from './components/CodeAnalysis';
 import { fetchRepoData } from './services/githubService'; 
 import { askQuestionToModel } from './services/geminiService'; 
 import { MOCK_USER_ID, MOCK_AI_NAME, MOCK_BOT_ID, SOCKET_SERVER_URL } from './constants';
@@ -27,6 +28,7 @@ const App: React.FC = () => {
   const [socketStatus, setSocketStatus] = useState<SocketStatusEnum>(SocketStatus.IDLE);
   const [showSocketErrorBanner, setShowSocketErrorBanner] = useState<boolean>(false);
 
+  const [activeTab, setActiveTab] = useState<'repo' | 'explainer' | 'analysis'>('repo');
 
   // Effect for global socket connection management
   useEffect(() => {
@@ -293,61 +295,99 @@ Provide a concise answer based *only* on the provided repository context.`;
   return (
     <div className="min-h-screen flex flex-col bg-gray-900 text-gray-100">
       <Navbar />
-      <main className="flex-grow p-4 md:p-6 space-y-6">
-        <GithubInput onFetch={handleFetchRepo} isLoading={isLoadingRepo} />
-
-        {showSocketErrorBanner && (
-          <div className="bg-red-800 border border-red-600 text-red-100 px-4 py-3 rounded-md relative mb-4" role="alert">
-            <strong className="font-bold">Chat Connection Error!</strong>
-            <span className="block sm:inline ml-1">
-              Could not connect to the real-time chat server at <code className="bg-red-700 p-0.5 rounded text-sm">{SOCKET_SERVER_URL}</code>.
-            </span>
-            <ul className="list-disc list-inside ml-4 mt-2 text-sm">
-              <li>Ensure the backend Socket.IO server is running.</li>
-              <li>Verify the server URL is correct and accessible.</li>
-              <li>Check server CORS configuration if frontend and backend are on different origins/ports.</li>
-              <li>See browser console (F12) for more "websocket error" details.</li>
-            </ul>
+      
+      <main className="flex-grow p-4 md:p-6">
+        <div className="mb-6">
+          <div className="flex space-x-4 border-b border-gray-700">
             <button
-              onClick={() => setShowSocketErrorBanner(false)}
-              className="absolute top-0 bottom-0 right-0 px-4 py-3 text-red-200 hover:text-red-50"
-              aria-label="Close"
+              className={`px-4 py-2 ${activeTab === 'repo' ? 'border-b-2 border-blue-500 text-blue-400' : 'text-gray-400 hover:text-gray-200'}`}
+              onClick={() => setActiveTab('repo')}
             >
-              <svg className="fill-current h-6 w-6" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Close</title><path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/></svg>
+              Repository Analysis
+            </button>
+            <button
+              className={`px-4 py-2 ${activeTab === 'explainer' ? 'border-b-2 border-blue-500 text-blue-400' : 'text-gray-400 hover:text-gray-200'}`}
+              onClick={() => setActiveTab('explainer')}
+            >
+              Code Explainer
+            </button>
+            <button
+              className={`px-4 py-2 ${activeTab === 'analysis' ? 'border-b-2 border-blue-500 text-blue-400' : 'text-gray-400 hover:text-gray-200'}`}
+              onClick={() => setActiveTab('analysis')}
+            >
+              Code Analysis
             </button>
           </div>
-        )}
-        
-        {isLoadingRepo && <div className="flex justify-center items-center py-10"><LoadingSpinner size="lg" /> <span className="ml-3 text-xl">Analyzing Repository...</span></div>}
-        {repoError && !isLoadingRepo && <div className="text-center text-red-400 bg-red-900 p-4 rounded-md border border-red-700">{repoError}</div>}
-        
-        {repoData && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 bg-gray-800 shadow-2xl rounded-lg overflow-hidden">
-              <RepoView repoData={repoData} />
-            </div>
-            <div className="lg:col-span-1 bg-gray-800 shadow-2xl rounded-lg flex flex-col max-h-[calc(100vh-200px)]">
-              {activeRepoForChat === repoData.fullName && (
-                <ChatWindow
-                  chatMessages={chatMessages.filter(msg => msg.roomId === repoData.fullName)}
-                  aiConversations={aiConversations.filter(conv => conv.repoFullName === repoData.fullName)}
-                  onSendMessage={handleSendMessage}
-                  onAskAI={handleAskAI}
-                  currentRepoName={repoData.fullName}
-                  socketStatus={socketStatus}
-                />
-              )}
-            </div>
-          </div>
-        )}
-        {!isLoadingRepo && !repoData && !repoError && !showSocketErrorBanner && (
-             <div className="text-center py-10 text-gray-500">
+        </div>
+
+        {activeTab === 'repo' ? (
+          <div className="space-y-6">
+            <GithubInput onFetch={handleFetchRepo} isLoading={isLoadingRepo} />
+            
+            {showSocketErrorBanner && (
+              <div className="bg-red-800 border border-red-600 text-red-100 px-4 py-3 rounded-md relative" role="alert">
+                <strong className="font-bold">Chat Connection Error!</strong>
+                <span className="block sm:inline ml-1">
+                  Could not connect to the real-time chat server at <code className="bg-red-700 p-0.5 rounded text-sm">{SOCKET_SERVER_URL}</code>.
+                </span>
+                <ul className="list-disc list-inside ml-4 mt-2 text-sm">
+                  <li>Ensure the backend Socket.IO server is running.</li>
+                  <li>Verify the server URL is correct and accessible.</li>
+                  <li>Check server CORS configuration if frontend and backend are on different origins/ports.</li>
+                  <li>See browser console (F12) for more "websocket error" details.</li>
+                </ul>
+                <button
+                  onClick={() => setShowSocketErrorBanner(false)}
+                  className="absolute top-0 bottom-0 right-0 px-4 py-3 text-red-200 hover:text-red-50"
+                  aria-label="Close"
+                >
+                  <svg className="fill-current h-6 w-6" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Close</title><path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/></svg>
+                </button>
+              </div>
+            )}
+            
+            {isLoadingRepo && <div className="flex justify-center items-center py-10"><LoadingSpinner size="lg" /> <span className="ml-3 text-xl">Analyzing Repository...</span></div>}
+            {repoError && !isLoadingRepo && <div className="text-center text-red-400 bg-red-900 p-4 rounded-md border border-red-700">{repoError}</div>}
+            
+            {repoData && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 bg-gray-800 shadow-2xl rounded-lg overflow-hidden">
+                  <RepoView repoData={repoData} />
+                </div>
+                <div className="lg:col-span-1 bg-gray-800 shadow-2xl rounded-lg flex flex-col max-h-[calc(100vh-200px)]">
+                  {activeRepoForChat === repoData.fullName && (
+                    <ChatWindow
+                      chatMessages={chatMessages.filter(msg => msg.roomId === repoData.fullName)}
+                      aiConversations={aiConversations.filter(conv => conv.repoFullName === repoData.fullName)}
+                      onSendMessage={handleSendMessage}
+                      onAskAI={handleAskAI}
+                      currentRepoName={repoData.fullName}
+                      socketStatus={socketStatus}
+                      showSocketErrorBanner={showSocketErrorBanner}
+                    />
+                  )}
+                </div>
+              </div>
+            )}
+            {!isLoadingRepo && !repoData && !repoError && !showSocketErrorBanner && (
+              <div className="text-center py-10 text-gray-500">
                 <h2 className="text-2xl font-semibold mb-2">Welcome to RepoInsight AI!</h2>
                 <p className="text-lg">Enter a public GitHub repository URL above to get started.</p>
                 <p className="mt-4">Example: <code className="bg-gray-700 p-1 rounded">https://github.com/facebook/react</code> or <code className="bg-gray-700 p-1 rounded">https://github.com/vitejs/vite</code></p>
-            </div>
+              </div>
+            )}
+          </div>
+        ) : activeTab === 'explainer' ? (
+          <div className="bg-gray-800 shadow-2xl rounded-lg overflow-hidden">
+            <CodeExplainer />
+          </div>
+        ) : (
+          <div className="bg-gray-800 shadow-2xl rounded-lg overflow-hidden">
+            <CodeAnalysis />
+          </div>
         )}
       </main>
+      
       <footer className="text-center p-4 text-sm text-gray-500 border-t border-gray-700">
         GitHub Repo Analyzer AI - Using live APIs. Chat attempts real-time connection to <code className="text-xs bg-gray-700 p-0.5 rounded">{SOCKET_SERVER_URL}</code>. Requires backend.
       </footer>
